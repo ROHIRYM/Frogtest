@@ -15,26 +15,66 @@ class CircleMap {
     this.sectors = sectors
   }
 
-  def findPath(star: Star, frog: Frog): String = {
-    assert(!isObjectOutOfBounds(star), s"Star $star is out of bounds")
-    assert(!isObjectOutOfBounds(frog), s"Frog $frog is out of bounds")
-    assert(!trees.contains(star), s"Star not allowed here $star")
-    assert(!trees.contains(frog), s"Frog not allowed here $frog")
-    
-    this.star = star
-    this.frog = frog
-    
+  def findPath(): String = {
     val path = findPath(frog, List())
     var res = ""
-    path.foreach(f => res = res + f + " -> ")
-    res = res.substring(0, res.length - 4)
-    
+
+    if (path == null || path.isEmpty) {
+      res = "No path"
+    } else {
+      path.foreach(f => res = res + f + " -> ")
+      res = res.substring(0, res.length - 4)
+    }
+
     res
   }
 
   def findPath(frog: Frog, accumulator: List[Frog]): List[Frog] = {
-    val newList = frog :: accumulator
-    newList
+    val frogTmp = if (isObjectOutOfSectors(frog)) new Frog(frog.circle, frog.sector - sectors) else frog
+
+    if (isObjectOutOfCircles(frogTmp)) {
+      return null
+    }
+    if (accumulator.contains(frogTmp)) {
+      return null
+    }
+    if (trees.contains(frogTmp)) {
+      return null
+    }
+
+    val newList = frogTmp :: accumulator
+
+    if (frogTmp == star) {
+      return newList
+    }
+
+    val results = List(
+      findPath(frogTmp.moveForward(), newList),
+      findPath(frogTmp.moveForward2Left1(), newList),
+      findPath(frogTmp.moveForward2Right1(), newList),
+      findPath(frogTmp.moveForward1Left2(), newList),
+      findPath(frogTmp.moveForward1Right2(), newList)
+    ).filter(list => list != null)
+
+    if (results.isEmpty) {
+      return null
+    }
+
+    results.minBy(_.length)
+  }
+
+  def addStar(star: Star): Unit = {
+    assert(!isObjectOutOfBounds(star), s"Star $star is out of bounds")
+    assert(!trees.contains(star), s"Star not allowed here $star")
+
+    this.star = star
+  }
+
+  def addFrog(frog: Frog): Unit = {
+    assert(!isObjectOutOfBounds(frog), s"Frog $frog is out of bounds")
+    assert(!trees.contains(frog), s"Frog not allowed here $frog")
+
+    this.frog = frog
   }
 
   def addTrees(trees: List[Tree]): Unit = {
@@ -48,7 +88,13 @@ class CircleMap {
   }
 
   private def isObjectOutOfBounds(obj: SegmentObject): Boolean =
-    obj.circle > circles || obj.circle < 1 || obj.sector > sectors || obj.sector < 1
+    isObjectOutOfCircles(obj) || isObjectOutOfSectors(obj)
+
+  private def isObjectOutOfCircles(obj: SegmentObject): Boolean =
+    obj.circle > circles || obj.circle < 1
+
+  private def isObjectOutOfSectors(obj: SegmentObject): Boolean =
+    obj.sector > sectors || obj.sector < 1
 
   private def drawSegment(obj: SegmentObject): String = {
     if (trees.contains(obj)) {
