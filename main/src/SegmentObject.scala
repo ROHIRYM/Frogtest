@@ -12,4 +12,11 @@ class SegmentObject(val circle: Int = 1, val sector: Int = 1) {
     s"(Circle $circle; Sector $sector)"
     
   def draw: String = " -- "
+  
+  def getDistance(obj: SegmentObject, maxSectors: Int): Double = {
+    Math.sqrt(
+      (this.circle - obj.circle)*(this.circle - obj.circle) +
+        (if (this.sector > obj.sector) (maxSectors - this.sector + obj.sector)*(maxSectors - this.sector + obj.sector) else (this.sector - obj.sector)*(this.sector - obj.sector))
+    )
+  }
 }

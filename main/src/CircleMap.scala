@@ -22,7 +22,7 @@ class CircleMap {
     if (path == null || path.isEmpty) {
       res = "No path"
     } else {
-      path.foreach(f => res = res + f + " -> ")
+      path.reverse.foreach(f => res = res + f + " -> ")
       res = res.substring(0, res.length - 4)
     }
 
@@ -48,13 +48,15 @@ class CircleMap {
       return newList
     }
 
-    val results = List(
-      findPath(frogTmp.moveForward(), newList),
-      findPath(frogTmp.moveForward2Left1(), newList),
-      findPath(frogTmp.moveForward2Right1(), newList),
-      findPath(frogTmp.moveForward1Left2(), newList),
-      findPath(frogTmp.moveForward1Right2(), newList)
-    ).filter(list => list != null)
+    val nextFrogPositions = List(
+      frogTmp.moveForward1Left2(),
+      frogTmp.moveForward2Left1(),
+      frogTmp.moveForward(),
+      frogTmp.moveForward2Right1(),
+      frogTmp.moveForward1Right2()
+    )
+
+    val results = nextFrogPositions.map(f => findPath(f, newList)).filter(list => list != null)
 
     if (results.isEmpty) {
       return null
