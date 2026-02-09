@@ -18,15 +18,48 @@ class CircleMap {
 
   def findPathForFrogToStar(): String = {
     findPath()
-    
+
     this.toString()
   }
-  
+
   def findPath(): List[SegmentObject] = {
     assert(frog != null, "We need the frog")
     assert(star != null, "We need the star")
-    
+
+    var path = findPath(List(frog), List()).parentState
+    while (path != null && path.parentState != null) {
+      pathElements = PathElement(path.circle, path.sector) :: pathElements
+      path = path.parentState
+    }
+
     frog :: pathElements.appended(star)
+  }
+
+  private def findPath(frontier: List[Frog], exploredSet: List[Frog]): Frog = {
+    assert(frontier.nonEmpty, "No path")
+
+    var head = frontier.head
+    if (isObjectOutOfSectors(head)) {
+      head = Frog(head.circle, head.sector - sectors, head.parentState)
+    }
+
+    if (head == star) {
+      return head
+    }
+
+    if (exploredSet.contains(head) || trees.contains(head) || isObjectOutOfCircles(head)) {
+      return findPath(frontier.tail, exploredSet)
+    }
+
+    val nextSteps = List(
+      head.moveForward(),
+      head.moveForward2Left1(),
+      head.moveForward2Right1(),
+      head.moveForward1Left2(),
+      head.moveForward1Right2()
+    )
+
+    findPath(frontier.tail ::: nextSteps, head :: exploredSet)
   }
 
   def addStar(star: Star): Unit = {
