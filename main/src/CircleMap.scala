@@ -5,6 +5,7 @@ class CircleMap {
   private var trees: List[Tree] = List()
   private var star: Star = null
   private var frog: Frog = null
+  private var pathElements: List[PathElement] = List()
 
   def this(circles: Int = 1, sectors: Int = 1) = {
     this()
@@ -15,54 +16,17 @@ class CircleMap {
     this.sectors = sectors
   }
 
-  def findPath(): String = {
-    val path = findPath(frog, List())
-    var res = ""
-
-    if (path == null || path.isEmpty) {
-      res = "No path"
-    } else {
-      path.reverse.foreach(f => res = res + f + " -> ")
-      res = res.substring(0, res.length - 4)
-    }
-
-    res
+  def findPathForFrogToStar(): String = {
+    findPath()
+    
+    this.toString()
   }
-
-  def findPath(frog: Frog, accumulator: List[Frog]): List[Frog] = {
-    val frogTmp = if (isObjectOutOfSectors(frog)) new Frog(frog.circle, frog.sector - sectors) else frog
-
-    if (isObjectOutOfCircles(frogTmp)) {
-      return null
-    }
-    if (accumulator.contains(frogTmp)) {
-      return null
-    }
-    if (trees.contains(frogTmp)) {
-      return null
-    }
-
-    val newList = frogTmp :: accumulator
-
-    if (frogTmp == star) {
-      return newList
-    }
-
-    val nextFrogPositions = List(
-      frogTmp.moveForward1Left2(),
-      frogTmp.moveForward2Left1(),
-      frogTmp.moveForward(),
-      frogTmp.moveForward2Right1(),
-      frogTmp.moveForward1Right2()
-    )
-
-    val results = nextFrogPositions.map(f => findPath(f, newList)).filter(list => list != null)
-
-    if (results.isEmpty) {
-      return null
-    }
-
-    results.minBy(_.length)
+  
+  def findPath(): List[SegmentObject] = {
+    assert(frog != null, "We need the frog")
+    assert(star != null, "We need the star")
+    
+    frog :: pathElements.appended(star)
   }
 
   def addStar(star: Star): Unit = {
@@ -86,7 +50,8 @@ class CircleMap {
   def addTree(tree: Tree): Unit = {
     assert(!isObjectOutOfBounds(tree), s"Tree $tree is out of bounds")
     assert(!trees.contains(tree), s"Duplicate tree $tree")
-    trees = tree :: this.trees
+    assert(frog != tree && star != tree, s"Tree not allowed here $tree")
+    trees = tree :: trees
   }
 
   private def isObjectOutOfBounds(obj: SegmentObject): Boolean =
@@ -105,6 +70,8 @@ class CircleMap {
       return star.draw
     } else if (frog == obj) {
       return frog.draw
+    } else if (pathElements.contains(obj)) {
+      return pathElements.head.draw
     }
     obj.draw
   }
